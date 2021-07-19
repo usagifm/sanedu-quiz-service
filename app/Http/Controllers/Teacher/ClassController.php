@@ -19,12 +19,12 @@ class ClassController extends Controller
 {
     
     public function classes() {
-        $perPage = $_GET['per_page'] ?? 30;
+        $perPage = $_GET['per_page'] ?? 10;
         $page = isset($_GET['page']) ? $_GET['page']*$perPage : 0;
 
         $class = ClassModel::where("creator_id", Auth::user()->id)
-                    ->offset($page)
-                    ->limit($perPage)
+                    // ->offset($page)
+                    // ->limit($perPage)
                     ->get();
         $data = $class->map(function($item){
             return ClassModel::mapData($item);
@@ -59,9 +59,6 @@ class ClassController extends Controller
             'quota' => 'required|numeric|min:1',
         ]);
         if ($validator->fails()) return $this->responseInvalidInput($validator->errors());
-
-        $class  = ClassModel::where("class_code", $request->class_code)->first();
-        if($class) return $this->responseError("Class Code Not Available");
 
         $code = $this->uniqidReal(6);
         $check = ClassModel::where("class_code", $code)->first();
@@ -210,6 +207,7 @@ class ClassController extends Controller
         $meeting   = ClassMeeting::where("id", $meetingId)
                     ->where("class_id", $id)
                     ->first();
+        if(!$meeting) return $this->responseError("Pertemuan Tidak ada");
 
         $attendees = $class->students->map(function($student) use ($meeting) {
             $result = [
@@ -245,9 +243,20 @@ class ClassController extends Controller
             }
             return $result;
         });
-
-        if(!$meeting) return $this->responseError("Pertemuan Tidak ada");
-        return $this->responseOK(ClassMeeting::mapDetailData($meeting, ['attendees' => $attendees]));
+        
+        $attempts = [];
+        if($meeting->quiz) {
+            $atmps = Attempt::where("quiz_id", $meeting->quiz->id)->orderBy("score", "desc")->get();
+            $now = date("Y-m-d H:i:s");
+            foreach($atmps as $item) {
+                if($now >= date("Y-m-d H:i:s", strtotime($item->finished_at))) {
+                    $attempts[] = Attempt::mapData($item);
+                }
+            }
+        }
+        return $this->responseOK(ClassMeeting::mapDetailData(
+            $meeting, ['attendees' => $attendees, 'quiz_attempts' => $attempts]
+        ));
     }
 
     public function lessons($id, $meetingId) {

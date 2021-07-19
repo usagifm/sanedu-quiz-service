@@ -10,8 +10,6 @@ date_default_timezone_set(env('APP_TIMEZONE', 'Asia/Jakarta'));
 
 
 
-
-
 /*
 |--------------------------------------------------------------------------
 | Create The Application

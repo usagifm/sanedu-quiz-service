@@ -25,24 +25,31 @@ class SyslogUdpHandler extends AbstractSyslogHandler
 {
     const RFC3164 = 0;
     const RFC5424 = 1;
+    const RFC5424e = 2;
 
+    /** @var array<self::RFC*, string> */
     private $dateFormats = array(
         self::RFC3164 => 'M d H:i:s',
         self::RFC5424 => \DateTime::RFC3339,
+        self::RFC5424e => \DateTime::RFC3339_EXTENDED,
     );
 
+    /** @var UdpSocket */
     protected $socket;
+    /** @var string */
     protected $ident;
+    /** @var self::RFC* */
     protected $rfc;
 
     /**
-     * @param string     $host
-     * @param int        $port
+     * @param string     $host     Either IP/hostname or a path to a unix socket (port must be 0 then)
+     * @param int        $port     Port number, or 0 if $host is a unix socket
      * @param string|int $facility Either one of the names of the keys in $this->facilities, or a LOG_* facility constant
-     * @param string|int $level    The minimum logging level at which this handler will be triggered
      * @param bool       $bubble   Whether the messages that are handled can bubble up the stack or not
      * @param string     $ident    Program name or tag for each log message.
      * @param int        $rfc      RFC to format the message for.
+     *
+     * @phpstan-param self::RFC* $rfc
      */
     public function __construct(string $host, int $port = 514, $facility = LOG_USER, $level = Logger::DEBUG, bool $bubble = true, string $ident = 'php', int $rfc = self::RFC5424)
     {
@@ -51,7 +58,7 @@ class SyslogUdpHandler extends AbstractSyslogHandler
         $this->ident = $ident;
         $this->rfc = $rfc;
 
-        $this->socket = new UdpSocket($host, $port ?: 514);
+        $this->socket = new UdpSocket($host, $port);
     }
 
     protected function write(array $record): void
@@ -70,13 +77,22 @@ class SyslogUdpHandler extends AbstractSyslogHandler
         $this->socket->close();
     }
 
+    /**
+     * @param  string|string[] $message
+     * @return string[]
+     */
     private function splitMessageIntoLines($message): array
     {
         if (is_array($message)) {
             $message = implode("\n", $message);
         }
 
-        return preg_split('/$\R?^/m', (string) $message, -1, PREG_SPLIT_NO_EMPTY);
+        $lines = preg_split('/$\R?^/m', (string) $message, -1, PREG_SPLIT_NO_EMPTY);
+        if (false === $lines) {
+            throw new \RuntimeException('Could not preg_split: '.preg_last_error().' / '.preg_last_error_msg());
+        }
+
+        return $lines;
     }
 
     /**
@@ -94,10 +110,13 @@ class SyslogUdpHandler extends AbstractSyslogHandler
             $hostname = '-';
         }
 
-        if ($this->rfc === self::RFC3164) {
-            $datetime->setTimezone(new \DateTimeZone('UTC'));
+        if ($this->rfc === self::RFC3164 && ($datetime instanceof \DateTimeImmutable || $datetime instanceof \DateTime)) {
+            $dateNew = $datetime->setTimezone(new \DateTimeZone('UTC'));
+            $date = $dateNew->format($this->dateFormats[$this->rfc]);
         }
-        $date = $datetime->format($this->dateFormats[$this->rfc]);
+        else {
+            $date = $datetime->format($this->dateFormats[$this->rfc]);
+        }
 
         if ($this->rfc === self::RFC3164) {
             return "<$priority>" .

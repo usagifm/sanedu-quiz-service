@@ -6,7 +6,7 @@
     "type": "project",
     "require": {
         "php": "^7.2.5",
-        "cloudinary/cloudinary_php": "^2.2",
+        "cloudinary/cloudinary_php": "^2.3",
         "irazasyed/larasupport": "^1.0",
         "laravel/lumen-framework": "^7.0",
         "nordsoftware/lumen-cors": "^3.3",

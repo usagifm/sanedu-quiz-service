@@ -79,8 +79,10 @@ class ClassController extends Controller
                             ->where("student_id", Auth::user()->id)
                             ->first();
             if($attempt)  {
+                $now = date("Y-m-d H:i:s");
                 $arr = ['attempt' => Attempt::mapData($attempt)];
-                return $this->responseOK(ClassMeeting::mapDetailData($data, $arr));
+                if($now >= date("Y-m-d H:i:s", strtotime($attempt->finished_at)))
+                    return $this->responseOK(ClassMeeting::mapDetailData($data, $arr));
             }
         }
 

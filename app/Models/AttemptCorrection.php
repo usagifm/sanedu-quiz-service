@@ -29,7 +29,9 @@ class AttemptCorrection extends Model
             'attempt_id' => $data->attempt_id,
             'quiz_question_id' => $data->quiz_question_id,
             'answer' => $data->answer,
+            'answer_image' => $data->answer_image != null ? env('APP_STORAGE_URL') . $data->answer_image : null,
             'is_correct' => $data->is_correct ? true : false,
+            'is_corrected' => $data->is_corrected ? true : false,
             'correct_answer' => $data->question->answer ?? $data->question->essay_answer
         ];
         if($additionalAttribute) {

@@ -73,10 +73,14 @@ class QuizController extends Controller
                     $attempt->quiz_id = $id;
                     $attempt->student_id = Auth::user()->id;
                     $attempt->started_at = date("Y-m-d H:i:s");
+                    
                     $ubah_format = date("Y-m-d H:i:s");
                     $date = date_create($ubah_format);
+
                     date_add($date, date_interval_create_from_date_string($quizCheck->duration . ' minutes'));
                     $hasil = date_format($date, "Y-m-d H:i:s");
+
+
                     $attempt->finished_at = $hasil;
                     $attempt->save();
                     return $this->responseOK(Attempt::mapDetailData($attempt));
@@ -87,7 +91,7 @@ class QuizController extends Controller
                 return $this->responseError("Pertemuan Belum di Mulai !");
             }
         } else if($dateNow != $meetDate) {
-            return $this->responseError("Tanggal Pertemuan Tidak Cocok !");
+            return $this->responseError("Waktu Pertemuan Tidak Cocok !");
         }
     }
 
@@ -104,32 +108,31 @@ class QuizController extends Controller
             ->first();
         if(!$class) return $this->responseError("Anda Belum Mendaftar di kelas ini !");
 
-        $ongoingQuizCheck = date("Y-m-d H:i:s");
+        $now = date("Y-m-d H:i:s");
 
-        $check = Attempt::where('quiz_id', $id)
+        $attempt = Attempt::where('quiz_id', $id)
             ->where('student_id', Auth::user()->id)
-            ->where('started_at', '<', $ongoingQuizCheck)
-            ->where('finished_at', '>', $ongoingQuizCheck)
+            ->where('started_at', '<', $now)
             ->first();
-        if(!$check) return $this->responseError("Kuis Telah Selesai !");
+        if($attempt->finished_at <= $now) return $this->responseOK(Attempt::mapDetailData($attempt));
 
-        $quizMaxTime = $check->finished_at;
+        $quizMaxTime = $attempt->finished_at;
         $finishNow = date("Y-m-d H:i:s");
 
         if($finishNow < $quizMaxTime) {
-            $check->finished_at = $finishNow;
-            $check->save();
+            $attempt->finished_at = $finishNow;
+            $attempt->save();
         } else if($finishNow > $quizMaxTime) {
-            $check->finished_at = $quizMaxTime;
-            $check->save();
+            $attempt->finished_at = $quizMaxTime;
+            $attempt->save();
         }
-        return $this->responseOK(Attempt::mapDetailData($check));
+        return $this->responseOK(Attempt::mapDetailData($attempt));
     }
 
-    public function answerQuestion(Request $request, $id){
+    public function answerQuestion(Request $request, $id)
+    {
         $validator = Validator::make($request->all(), [
             'attempt_id' => 'required',
-            'answer' => 'required',
             'quiz_question_id' => 'required',
         ]);
         if($validator->fails()) return $this->responseInvalidInput($validator->errors());
@@ -144,36 +147,43 @@ class QuizController extends Controller
             ->where('class_id', $meet->class_id)
             ->first();
         if(!$class) return $this->responseError("Anda Belum Mendaftar di kelas ini !");
+
         $ongoingQuizCheck = date("Y-m-d H:i:s");
+
         $check = Attempt::where('quiz_id', $id)
             ->where('student_id', Auth::user()->id)
             ->where('started_at', '<', $ongoingQuizCheck)
             ->where('finished_at', '>', $ongoingQuizCheck)
             ->first();
         if(!$check) return $this->responseError("Kuis Telah Selesai !");
+
         $isAnswered = AttemptCorrection::where('attempt_id', $request->attempt_id)
             ->where('quiz_question_id', $request->quiz_question_id)
             ->first();
+
         if($isAnswered) return $this->responseOK(AttemptCorrection::mapData($isAnswered));
 
-            $jawaban = new AttemptCorrection;
-            $jawaban->attempt_id = $request->attempt_id;
-            $jawaban->quiz_question_id = $request->quiz_question_id;
-
+        $jawaban = new AttemptCorrection;
+        $jawaban->attempt_id = $request->attempt_id;
+        $jawaban->quiz_question_id = $request->quiz_question_id;
         if($check->id != $request->attempt_id) return $this->responseError("Anda Tidak Dapat Mengubah Jawaban Quiz Lain !");
-            $answerCheck = QuizQuestion::where('id', $request->quiz_question_id)->first();
-            $jawaban->answer = $request->answer;
+
+        $answerCheck = QuizQuestion::where('id', $request->quiz_question_id)->first();
+        $jawaban->answer = $request->answer;
+        $jawaban->is_corrected = $answerCheck->question_type == 1;
         if($request->answer == $answerCheck->answer)
             $jawaban->is_correct = true;
         else if($request->answer != $answerCheck->answer)
             $jawaban->is_correct = false;
+        
+        if($request->answer_image) {
+            $jawaban->answer_image = $this->uploadImage($request->answer_image);
+        }
+        
         $jawaban->save();
 
         return $this->responseOK(AttemptCorrection::mapData($jawaban));
     }
-
-
-
 
     public function updateQuestion(Request $request, $id)
     {
@@ -213,11 +223,15 @@ class QuizController extends Controller
 
         $answerCheck = QuizQuestion::where('id', $jawaban->quiz_question_id)->first();
         $jawaban->answer = $request->answer;
-
+        $jawaban->is_corrected = $answerCheck->question_type == 1;
         if($request->answer == $answerCheck->answer)
             $jawaban->is_correct = true;
         else if($request->answer != $answerCheck->answer)
             $jawaban->is_correct = false;
+        
+        if($request->answer_image) {
+            $jawaban->answer_image = $this->uploadImage($request->answer_image);
+        }
         $jawaban->save();
         return $this->responseOK(AttemptCorrection::mapData($jawaban));
     }

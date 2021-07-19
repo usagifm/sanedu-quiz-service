@@ -31,6 +31,8 @@ class Attempt extends Model
             'id' => $data->id,
             'quiz_id' => $data->quiz_id,
             'student_id' => $data->student_id,
+            'student_name' => $data->student->name,
+            'student_school' => $data->student->school,
             'started_at' => date("Y-m-d H:i:s", strtotime($data->started_at)),
             'finished_at' => date("Y-m-d H:i:s", strtotime($data->finished_at)),
             'correct_number' => $data->correct_number,

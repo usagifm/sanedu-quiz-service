@@ -70,6 +70,9 @@ class AuthController extends Controller
         $user->is_teacher = $request->is_teacher;
         $user->whatsapp = $request->whatsapp;
         $user->parent_phone_number = $request->parent_phone_number;
+        if($request->profile_image) {
+            $user->profile_image = $this->uploadImage($request->profile_image);
+        }
         $user->save();
         return $this->responseOK(User::mapData($user));
     }

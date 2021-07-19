@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\Attempt;
+use App\Models\AttemptCorrection;
 use App\Models\ClassMeeting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -114,6 +116,56 @@ class QuizController extends Controller
                     ->first();
         if(!$class) return $this->responseError("Kelas tidak ada");
         return null;
+    }
+
+    public function getEssayAnswer($id, $questionId) {
+        $quiz = Quiz::find($id);
+        if(!$quiz) return $this->responseError("Quiz tidak ada");
+
+        if($this->notMyQuiz($quiz->meeting_id))  return $this->notMyQuiz($quiz->meeting_id);
+
+        $question = QuizQuestion::where("quiz_id", $id)
+                                ->where("id", $questionId)
+                                ->where("question_type", 2)
+                                ->first();
+        if(!$question) return $this->responseError("Soal tidak ditemukan");
+
+        $answers = AttemptCorrection::where("quiz_question_id", $questionId)->get();
+        $answers = $answers->map(function($item) {
+            return AttemptCorrection::mapData($item);
+        });
+
+        return $this->responseOK($answers);
+    }
+    
+    public function correctEssayAnswer(Request $request, $id, $questionId) {
+        $quiz = Quiz::find($id);
+        if(!$quiz) return $this->responseError("Quiz tidak ada");
+
+        if($this->notMyQuiz($quiz->meeting_id))  return $this->notMyQuiz($quiz->meeting_id);
+
+        $question = QuizQuestion::where("quiz_id", $id)
+                                ->where("id", $questionId)
+                                ->where("question_type", 2)
+                                ->first();
+        if(!$question) return $this->responseError("Soal tidak ditemukan");
+
+        $answers = AttemptCorrection::where("quiz_question_id", $questionId)
+                                ->where("id", $request->attempt_correction_id)
+                                ->first();
+        if(!$answers) return $this->responseError("Jawaban tidak ada");
+
+        $answers->is_correct = $request->is_correct;
+        $answers->is_corrected = true;
+        $answers->save();
+        
+        return $this->responseOK("OK");
+    }
+
+    public function attemptDetail($id, $attemptId) {
+        $attempt = Attempt::where("id", $attemptId)->where("quiz_id", $id)->first();
+        if(!$attempt) return $this->responseError("Attempt tidak ada");
+        return $this->responseOK(Attempt::mapDetailData($attempt));
     }
 
 }

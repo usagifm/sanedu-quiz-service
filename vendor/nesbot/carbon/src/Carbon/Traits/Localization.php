@@ -168,12 +168,12 @@ trait Localization
      *
      * @return string
      */
-    public static function getTranslationMessageWith($translator, string $key, string $locale = null, string $default = null)
+    public static function getTranslationMessageWith($translator, string $key, ?string $locale = null, ?string $default = null)
     {
         if (!($translator instanceof TranslatorBagInterface && $translator instanceof TranslatorInterface)) {
             throw new InvalidTypeException(
                 'Translator does not implement '.TranslatorInterface::class.' and '.TranslatorBagInterface::class.'. '.
-                (is_object($translator) ? get_class($translator) : gettype($translator)).' has been given.'
+                (\is_object($translator) ? \get_class($translator) : \gettype($translator)).' has been given.'
             );
         }
 
@@ -196,7 +196,7 @@ trait Localization
      *
      * @return string
      */
-    public function getTranslationMessage(string $key, string $locale = null, string $default = null, $translator = null)
+    public function getTranslationMessage(string $key, ?string $locale = null, ?string $default = null, $translator = null)
     {
         return static::getTranslationMessageWith($translator ?: $this->getLocalTranslator(), $key, $locale, $default);
     }
@@ -239,12 +239,12 @@ trait Localization
      *
      * @param string                                             $key
      * @param array                                              $parameters
-     * @param null                                               $number
+     * @param string|int|float|null                              $number
      * @param \Symfony\Component\Translation\TranslatorInterface $translator
      *
      * @return string
      */
-    public function translate(string $key, array $parameters = [], $number = null, TranslatorInterface $translator = null, bool $altNumbers = false): string
+    public function translate(string $key, array $parameters = [], $number = null, ?TranslatorInterface $translator = null, bool $altNumbers = false): string
     {
         $translation = static::translateWith($translator ?: $this->getLocalTranslator(), $key, $parameters, $number);
 
@@ -302,7 +302,7 @@ trait Localization
             return $result;
         }
 
-        return "$number";
+        return (string) $number;
     }
 
     /**
@@ -387,7 +387,7 @@ trait Localization
                     'second',
                 ], $messages, $key) : [],
                 $mode & CarbonInterface::TRANSLATE_MERIDIEM ? array_map(function ($hour) use ($meridiem) {
-                    if (is_array($meridiem)) {
+                    if (\is_array($meridiem)) {
                         return $meridiem[$hour < 12 ? 0 : 1];
                     }
 
@@ -396,11 +396,11 @@ trait Localization
             );
         }
 
-        return substr(preg_replace_callback('/(?<=[\d\s+.\/,_-])('.implode('|', $fromTranslations).')(?=[\d\s+.\/,_-])/i', function ($match) use ($fromTranslations, $toTranslations) {
+        return substr(preg_replace_callback('/(?<=[\d\s+.\/,_-])('.implode('|', $fromTranslations).')(?=[\d\s+.\/,_-])/iu', function ($match) use ($fromTranslations, $toTranslations) {
             [$chunk] = $match;
 
             foreach ($fromTranslations as $index => $word) {
-                if (preg_match("/^$word\$/i", $chunk)) {
+                if (preg_match("/^$word\$/iu", $chunk)) {
                     return $toTranslations[$index] ?? '';
                 }
             }
@@ -426,7 +426,7 @@ trait Localization
      * Get/set the locale for the current instance.
      *
      * @param string|null $locale
-     * @param string[]    ...$fallbackLocales
+     * @param string      ...$fallbackLocales
      *
      * @return $this|string
      */
@@ -535,7 +535,7 @@ trait Localization
     public static function executeWithLocale($locale, $func)
     {
         $currentLocale = static::getLocale();
-        $result = call_user_func($func, static::setLocale($locale) ? static::getLocale() : false, static::translator());
+        $result = $func(static::setLocale($locale) ? static::getLocale() : false, static::translator());
         static::setLocale($currentLocale);
 
         return $result;
@@ -706,7 +706,7 @@ trait Localization
      */
     protected function getTranslatorLocale($translator = null): ?string
     {
-        if (func_num_args() === 0) {
+        if (\func_num_args() === 0) {
             $translator = $this->getLocalTranslator();
         }
 
@@ -724,7 +724,7 @@ trait Localization
      */
     protected static function getLocaleAwareTranslator($translator = null)
     {
-        if (func_num_args() === 0) {
+        if (\func_num_args() === 0) {
             $translator = static::translator();
         }
 
@@ -792,7 +792,7 @@ trait Localization
     {
         $filler = '>>DO NOT REPLACE<<';
 
-        if (is_array($translation)) {
+        if (\is_array($translation)) {
             return array_pad($translation, $length, $filler);
         }
 
