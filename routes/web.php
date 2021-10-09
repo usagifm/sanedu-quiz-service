@@ -29,8 +29,8 @@ $router->get('general/time',        'GeneralController@time');
 $router->group(['middleware' => 'auth'], function ($router) {
     $router->post('logout',             'AuthController@logout');
 
-    // $router->get('/profile',            ['uses' => 'ProfileController@getProfileDetail', 'middleware' => 'auth']);
-    // $router->post('/profile/edit',      ['uses' => 'ProfileController@editProfile', 'middleware' => 'auth']);
+    $router->get('/profile',            ['uses' => 'ProfileController@getProfileDetail', 'middleware' => 'auth']);
+    $router->post('/profile/edit',      ['uses' => 'ProfileController@editProfile', 'middleware' => 'auth']);
 
 
 
@@ -38,33 +38,33 @@ $router->group(['middleware' => 'auth'], function ($router) {
     // TEACHER PREFIXS
     // ------------------------------------------------------------------
     $router->group(['prefix' => 'teacher'], function ($router) {
-        // $router->get('/class',              ['uses' => 'Teacher\ClassController@classes', 'middleware' => 'auth']);
-        // $router->post('/class/create',      ['uses' => 'Teacher\ClassController@create', 'middleware' => 'auth']);
-        // $router->get('/class/delete/{id}',  ['uses' => 'Teacher\ClassController@delete', 'middleware' => 'auth']);
-        // $router->post('/class/edit/{id}',   ['uses' => 'Teacher\ClassController@update', 'middleware' => 'auth']);
-        // $router->get('/class/{id}',         ['uses' => 'Teacher\ClassController@detail', 'middleware' => 'auth']);
-        // $router->get('/class/{id}',         ['uses' => 'Teacher\ClassController@detail', 'middleware' => 'auth']);
-        // $router->post('/class/{id}/editclasscode', ['uses' => 'Teacher\ClassController@editClassCode', 'middleware' => 'auth']);
+        $router->get('/class',              ['uses' => 'Teacher\ClassController@classes', 'middleware' => 'auth']);
+        $router->post('/class/create',      ['uses' => 'Teacher\ClassController@create', 'middleware' => 'auth']);
+        $router->get('/class/delete/{id}',  ['uses' => 'Teacher\ClassController@delete', 'middleware' => 'auth']);
+        $router->post('/class/edit/{id}',   ['uses' => 'Teacher\ClassController@update', 'middleware' => 'auth']);
+        $router->get('/class/{id}',         ['uses' => 'Teacher\ClassController@detail', 'middleware' => 'auth']);
+        $router->get('/class/{id}',         ['uses' => 'Teacher\ClassController@detail', 'middleware' => 'auth']);
+        $router->post('/class/{id}/editclasscode', ['uses' => 'Teacher\ClassController@editClassCode', 'middleware' => 'auth']);
 
-        // $router->group(['prefix' => 'class/{id}/students'], function ($router) {
-        //     $router->get('/delete/{studentId}',  ['uses' => 'Teacher\ClassController@deleteStudent', 'middleware' => 'auth']);
-        // });
+        $router->group(['prefix' => 'class/{id}/students'], function ($router) {
+            $router->get('/delete/{studentId}',  ['uses' => 'Teacher\ClassController@deleteStudent', 'middleware' => 'auth']);
+        });
 
 
-        // $router->group(['prefix' => 'class/{id}/meeting'], function ($router) {
-        //     $router->get('/',                    ['uses' => 'Teacher\ClassController@meetings', 'middleware' => 'auth']);
-        //     $router->post('/create',             ['uses' => 'Teacher\ClassController@createClassMeeting', 'middleware' => 'auth']);
-        //     $router->get('/delete/{meetingId}',  ['uses' => 'Teacher\ClassController@deleteClassMeeting', 'middleware' => 'auth']);
-        //     $router->post('/edit/{meetingId}',   ['uses' => 'Teacher\ClassController@editClassMeeting', 'middleware' => 'auth']);
-        //     $router->get('/{meetingId}',         ['uses' => 'Teacher\ClassController@detailMeeting', 'middleware' => 'auth']);
-        // });
+        $router->group(['prefix' => 'class/{id}/meeting'], function ($router) {
+            $router->get('/',                    ['uses' => 'Teacher\ClassController@meetings', 'middleware' => 'auth']);
+            $router->post('/create',             ['uses' => 'Teacher\ClassController@createClassMeeting', 'middleware' => 'auth']);
+            $router->get('/delete/{meetingId}',  ['uses' => 'Teacher\ClassController@deleteClassMeeting', 'middleware' => 'auth']);
+            $router->post('/edit/{meetingId}',   ['uses' => 'Teacher\ClassController@editClassMeeting', 'middleware' => 'auth']);
+            $router->get('/{meetingId}',         ['uses' => 'Teacher\ClassController@detailMeeting', 'middleware' => 'auth']);
+        });
 
-        // $router->group(['prefix' => 'class/{id}/meeting/{meetingId}/lesson'], function ($router) {
-        //     $router->get('/',                    ['uses' => 'Teacher\ClassController@lessons', 'middleware' => 'auth']);
-        //     $router->post('/create',             ['uses' => 'Teacher\ClassController@createLesson', 'middleware' => 'auth']);
-        //     $router->get('/delete/{lessonId}',   ['uses' => 'Teacher\ClassController@deleteLesson', 'middleware' => 'auth']);
-        //     $router->post('/edit/{lessonId}',    ['uses' => 'Teacher\ClassController@editLesson', 'middleware' => 'auth']);
-        // });
+        $router->group(['prefix' => 'class/{id}/meeting/{meetingId}/lesson'], function ($router) {
+            $router->get('/',                    ['uses' => 'Teacher\ClassController@lessons', 'middleware' => 'auth']);
+            $router->post('/create',             ['uses' => 'Teacher\ClassController@createLesson', 'middleware' => 'auth']);
+            $router->get('/delete/{lessonId}',   ['uses' => 'Teacher\ClassController@deleteLesson', 'middleware' => 'auth']);
+            $router->post('/edit/{lessonId}',    ['uses' => 'Teacher\ClassController@editLesson', 'middleware' => 'auth']);
+        });
 
         $router->group(['prefix' => 'quiz'], function ($router) {
             $router->post('/create',                ['uses' => 'Teacher\QuizController@createQuiz', 'middleware' => 'auth']);
@@ -89,9 +89,9 @@ $router->group(['middleware' => 'auth'], function ($router) {
         $router->get('/class/{id}/resign',                              ['uses' => 'Student\ClassController@resignClass', 'middleware' => 'auth']);
         $router->get('/class/{id}',                                     ['uses' => 'Student\ClassController@detailAssignedClass', 'middleware' => 'auth']);
         $router->get('/class/{id}/meeting/{meetId}',                    ['uses' => 'Student\ClassController@detailMeeting', 'middleware' => 'auth']);
-        // $router->get('/class/{id}/meetings',                            ['uses' => 'Student\ClassController@listMeeting', 'middleware' => 'auth']);
-        // $router->get('/class/{id}/meeting/{meetId}/lesson/{lessonId}',  ['uses' => 'Student\ClassController@detailLesson', 'middleware' => 'auth']);
-        // $router->post('/class/attendlesson/{lessonId}',                 ['uses' => 'Student\ClassController@attendees', 'middleware' => 'auth']);
+        $router->get('/class/{id}/meetings',                            ['uses' => 'Student\ClassController@listMeeting', 'middleware' => 'auth']);
+        $router->get('/class/{id}/meeting/{meetId}/lesson/{lessonId}',  ['uses' => 'Student\ClassController@detailLesson', 'middleware' => 'auth']);
+        $router->post('/class/attendlesson/{lessonId}',                 ['uses' => 'Student\ClassController@attendees', 'middleware' => 'auth']);
         $router->get('/quiz/{id}',                                      ['uses' => 'Student\QuizController@getQuizDetail', 'middleware' => 'auth']);
         $router->post('/quiz/{id}/start',                               ['uses' => 'Student\QuizController@startQuiz', 'middleware' => 'auth']);
         $router->post('/quiz/{id}/finish',                              ['uses' => 'Student\QuizController@finishQuiz', 'middleware' => 'auth']);
